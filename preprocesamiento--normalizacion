@@ -1,0 +1,27 @@
+#ruiz vazquez monica
+#951
+# Realizar una función que normalice los datos usando escalado simple que reciba como parámetro un DataFrame y otro parámetro que sea una lista de columnas a normalizar. Retornar el DataFrame con los datos normalizados.
+
+
+
+
+import pandas as pd
+
+def normalizar_escalado_simple(df, columnas_a_normalizar):
+    df_normalizado = df.copy()
+    for columna in columnas_a_normalizar:
+        min_valor = df_normalizado[columna].min()
+        max_valor = df_normalizado[columna].max()
+        df_normalizado[columna] = (df_normalizado[columna] - min_valor) / (max_valor - min_valor)
+    return df_normalizado
+
+# Crear un nuevo conjunto de datos para ilustrar el ejemplo
+datos_ejemplo = {
+    'ingresos': [50000, 60000, 45000, 70000, 55000],
+    'gastos': [20000, 25000, 18000, 28000, 22000],
+    'ahorros': [30000, 35000, 27000, 42000, 33000]
+}
+
+ejemplo_df = pd.DataFrame(datos_ejemplo)
+ejemplo_normalizado = normalizar_escalado_simple(ejemplo_df, ['ingresos', 'gastos'])
+print(ejemplo_normalizado)

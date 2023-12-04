@@ -1,0 +1,386 @@
+#ruiz vazquez monica
+#951
+------------------#Desarrollar una clase llamada MySQLConnect que tenga como atributos: host, user, password, database. Debe crear sus métodos set y get (property, setters). Debe tener los siguientes métodos: conectar() : Debe conectarse a la base de datos usando los atributos, debe retornar el objeto de conexión. desconectar(): Debe desconectar la base de datos. No debe retornar nada. Investigar método close().---------------------
+
+import mysql.connector
+
+class MySQLConectar:
+    def __init__(self, anfitrion, usuario, contrasena, base_de_datos):
+        self._anfitrion = anfitrion
+        self._usuario = usuario
+        self._contrasena = contrasena
+        self._base_de_datos = base_de_datos
+        self._conexion = None
+
+    def establecer_conexion(self):
+        try:
+            self._conexion = mysql.connector.connect(
+                host=self._anfitrion,
+                user=self._usuario,
+                password=self._contrasena,
+                database=self._base_de_datos
+            )
+            print("Conexión establecida")
+            return self._conexion
+        except mysql.connector.Error as error:
+            print(f"Error al establecer conexión: {error}")
+            return None
+
+    def cerrar_conexion(self):
+        if self._conexion:
+            self._conexion.close()
+            print("Conexión cerrada")
+        else:
+            print("No hay conexión para cerrar")
+
+# Ejemplo de uso
+if __name__ == "__main__":
+    # Crear una instancia de la clase MySQLConectar
+    conexion = MySQLConectar(anfitrion="127.0.0.1", usuario="root", contrasena="12345678", base_de_datos="olimpiadas")
+
+    # Establecer conexión a la base de datos
+    conexion_establecida = conexion.establecer_conexion()
+    # Cerrar conexión
+    conexion.cerrar_conexion()
+
+
+
+
+-----------------------------# Desarrollar una clase llamada PaisMySQL que herede de  MySQLConnect. Debe agregar los atributos correspondientes de la clase padre.
+# Debe agregar los siguientes métodos:
+# insertar(id, nombre): Método para insertar datos en la Tabla Pais, debe recibir como parámetro las columnas de la tabla y debe retornar True si se inserta el dato o False en caso contrario.
+# editar(nombre): Método para editar el nombre en la Tabla País. Validar que nombre no exista en la tabla.
+# eliminar(id): Método para eliminar un elemento de la Tabla País. Debe tener como parámetro la llave primaria, retorna True si logró eliminarse y False en caso contrario.
+# consultar(filter): Método que recibe un filtro(cadena) y retorna una lista de tuplas con los resultados del filtro de la Tabla País. Ejemplo: “id = 1” , “nombre like %A%” ---------------------------------
+import mysql.connector
+
+class MySQLConnect:
+    def __init__(self, host, user, password, database):
+        self._host = host
+        self._user = user
+        self._password = password
+        self._database = database
+        self._connection = None
+
+    def establecer_conexion(self):
+        try:
+            self._connection = mysql.connector.connect(
+                host=self._host,
+                user=self._user,
+                password=self._password,
+                database=self._database
+            )
+            return self._connection
+        except mysql.connector.Error as err:
+            print(f"Error al establecer conexión: {err}")
+            return None
+
+    def cerrar_conexion(self):
+        if self._connection:
+            self._connection.close()
+            print("Conexión cerrada")
+
+class PaisMySQL(MySQLConnect):
+    def __init__(self, host, user, password, database):
+        super().__init__(host, user, password, database)
+
+    def insertar(self, id, nombre):
+        try:
+            connection = self.establecer_conexion()
+            if connection:
+                cursor = connection.cursor()
+                cursor.execute(f"SELECT COUNT(*) FROM Pais WHERE nombre = '{nombre}'")
+                count = cursor.fetchone()[0]
+                if count == 0:
+                    cursor.execute(f"INSERT INTO Pais (id, nombre) VALUES ({id}, '{nombre}')")
+                    connection.commit()
+                    print("Inserción exitosa")
+                    return True
+                else:
+                    print("Error: El nombre ya existe en la tabla")
+                    return False
+        finally:
+            self.cerrar_conexion()
+
+    def editar(self, id, nuevo_nombre):
+        try:
+            connection = self.establecer_conexion()
+            if connection:
+                cursor = connection.cursor()
+                cursor.execute(f"SELECT COUNT(*) FROM Pais WHERE nombre = '{nuevo_nombre}' AND id != {id}")
+                count = cursor.fetchone()[0]
+                if count == 0:
+                    cursor.execute(f"UPDATE Pais SET nombre = '{nuevo_nombre}' WHERE id = {id}")
+                    connection.commit()
+                    print("Edición exitosa")
+                    return True
+                else:
+                    print("Error: El nuevo nombre ya existe en la tabla")
+                    return False
+        finally:
+            self.cerrar_conexion()
+
+    def eliminar(self, id):
+        try:
+            connection = self.establecer_conexion()
+            if connection:
+                cursor = connection.cursor()
+                cursor.execute(f"DELETE FROM Pais WHERE id = {id}")
+                connection.commit()
+                if cursor.rowcount > 0:
+                    print("Eliminación exitosa")
+                    return True
+                else:
+                    print("Error: No se encontró el país con el ID proporcionado")
+                    return False
+        finally:
+            self.cerrar_conexion()
+
+    def consultar(self, filtro):
+        try:
+            connection = self.establecer_conexion()
+            if connection:
+                cursor = connection.cursor(dictionary=True)
+                cursor.execute(f"SELECT * FROM Pais WHERE {filtro}")
+                results = cursor.fetchall()
+                return results
+        finally:
+            self.cerrar_conexion()
+
+# Ejemplo de uso
+if __name__ == "__main__":
+    pais_db = PaisMySQL(host="127.0.0.1", user="root", password="12345678", database="olimpiadas")
+    pais_db.insertar(1, "Rusia")
+    pais_db.editar(1, "NuevoNombre")
+    pais_db.eliminar(1)
+    resultados = pais_db.consultar("id = 2")
+    print(resultados)
+
+
+
+----------------------------#Desarrollar una clase llamada OlimpiadaMySQL que herede de  MySQLConnect. Debe agregar los atributos correspondientes de la clase padre.
+#Debe agregar los siguientes métodos:
+#insertar(id, year): Método para insertar datos en la Tabla Olimpiada, debe recibir como parámetro las columnas de la tabla y debe retornar True si se inserta el dato o False en caso contrario.
+##editar(year): Método para editar el año en la Tabla Olimpiada. Validar que el año no exista en la tabla.
+#eliminar(id): Método para eliminar un elemento de la Tabla Olimpiada. Debe tener como parámetro la llave primaria, retorna True si logró eliminarse y False en caso contrario.
+#consultar(filter): Método que recibe un filtro(cadena) y retorna una lista de tuplas con los resultados del filtro de la Tabla Olimpiada. Ejemplo: “id = 1” , “year > 1990”------------------------------------
+
+import mysql.connector
+
+class MySQLConnect:
+    def __init__(self, host, user, password, database):
+        self._host = host
+        self._user = user
+        self._password = password
+        self._database = database
+        self._connection = None
+
+    def establecer_conexion(self):
+        try:
+            self._connection = mysql.connector.connect(
+                host=self._host,
+                user=self._user,
+                password=self._password,
+                database=self._database
+            )
+            return self._connection
+        except mysql.connector.Error as err:
+            print(f"Error al establecer conexión: {err}")
+            return None
+
+    def cerrar_conexion(self):
+        if self._connection:
+            self._connection.close()
+            print("Conexión cerrada")
+
+class OlimpiadaMySQL(MySQLConnect):
+    def __init__(self, host, user, password, database):
+        super().__init__(host, user, password, database)
+
+    def insertar(self, id, year):
+        try:
+            connection = self.establecer_conexion()
+            if connection:
+                cursor = connection.cursor()
+                cursor.execute(f"SELECT COUNT(*) FROM Olimpiada WHERE year = {year}")
+                count = cursor.fetchone()[0]
+                if count == 0:
+                    cursor.execute(f"INSERT INTO Olimpiada (id, year) VALUES ({id}, {year})")
+                    connection.commit()
+                    print("Inserción exitosa")
+                    return True
+                else:
+                    print("Error: El año ya existe en la tabla")
+                    return False
+        finally:
+            self.cerrar_conexion()
+
+    def editar(self, id, nuevo_year):
+        try:
+            connection = self.establecer_conexion()
+            if connection:
+                cursor = connection.cursor()
+                cursor.execute(f"SELECT COUNT(*) FROM Olimpiada WHERE year = {nuevo_year} AND id != {id}")
+                count = cursor.fetchone()[0]
+                if count == 0:
+                    cursor.execute(f"UPDATE Olimpiada SET year = {nuevo_year} WHERE id = {id}")
+                    connection.commit()
+                    print("Edición exitosa")
+                    return True
+                else:
+                    print("Error: El nuevo año ya existe en la tabla")
+                    return False
+        finally:
+            self.cerrar_conexion()
+
+    def eliminar(self, id):
+        try:
+            connection = self.establecer_conexion()
+            if connection:
+                cursor = connection.cursor()
+                cursor.execute(f"DELETE FROM Olimpiada WHERE id = {id}")
+                connection.commit()
+                if cursor.rowcount > 0:
+                    print("Eliminación exitosa")
+                    return True
+                else:
+                    print("Error: No se encontró la olimpiada con el ID proporcionado")
+                    return False
+        finally:
+            self.cerrar_conexion()
+
+    def consultar(self, filtro):
+        try:
+            connection = self.establecer_conexion()
+            if connection:
+                cursor = connection.cursor(dictionary=True)
+                cursor.execute(f"SELECT * FROM Olimpiada WHERE {filtro}")
+                results = cursor.fetchall()
+                return results
+        finally:
+            self.cerrar_conexion()
+
+# Ejemplo de uso
+if __name__ == "__main__":
+    olimpiada_db = OlimpiadaMySQL(host="127.0.0.1", user="root", password="12345678", database="olimpiadas")
+    
+    # Insertar una nueva olimpiada
+    olimpiada_db.insertar(1, 2024)
+
+    # Editar el año de la olimpiada con ID 1
+    olimpiada_db.editar(1, 2025)
+
+    # Eliminar la olimpiada con ID 1
+    olimpiada_db.eliminar(1)
+
+    # Consultar olimpiadas con año mayor a 2000
+    resultados = olimpiada_db.consultar("year > 2000")
+    print(resultados)
+
+
+
+-----------------------------#Desarrollar una clase llamada ResultadosMySQL que herede de  MySQLConnect. Debe agregar los atributos correspondientes de la clase padre.
+#Debe agregar los siguientes métodos:
+#insertar(idOlimpiada, idPais, idGenero, oro, plata, bronce): Método para insertar datos en la Tabla Resultados, debe recibir como parámetro las columnas de la tabla y debe retornar True si se inserta el dato o False en caso contrario.
+#editar(oro, plata, bronce): Método para editar oro, plata, bronce en la Tabla Resultados. Validar que sean valores enteros positivos.
+#eliminar(idOlimpiada, idPais, idGenero): Método para eliminar un elemento de la Tabla Resultados. Debe tener como parámetro la llave primaria compuesta, retorna True si logró eliminarse y False en caso contrario.
+#consultar(filter): Método que recibe un filtro(cadena) y retorna una lista de tuplas con los resultados del filtro de la Tabla Resultados. Ejemplo: “idPais = 1” , “idPais = 1 and idOlimpiada=2” ------------------------------------
+
+import mysql.connector
+
+class MySQLConnect:
+    def __init__(self, host, user, password, database):
+        self._host = host
+        self._user = user
+        self._password = password
+        self._database = database
+        self._connection = None
+
+    def establecer_conexion(self):
+        try:
+            self._connection = mysql.connector.connect(
+                host=self._host,
+                user=self._user,
+                password=self._password,
+                database=self._database
+            )
+            return self._connection
+        except mysql.connector.Error as err:
+            print(f"Error al establecer conexión: {err}")
+            return None
+
+    def cerrar_conexion(self):
+        if self._connection:
+            self._connection.close()
+            print("Conexión cerrada")
+
+class ResultadosMySQL(MySQLConnect):
+    def __init__(self, host, user, password, database):
+        super().__init__(host, user, password, database)
+
+    def insertar(self, idOlimpiada, idPais, idGenero, oro, plata, bronce):
+        try:
+            connection = self.establecer_conexion()
+            if connection:
+                cursor = connection.cursor()
+                cursor.execute(f"INSERT INTO Resultados (idOlimpiada, idPais, idGenero, oro, plata, bronce) "
+                               f"VALUES ({idOlimpiada}, {idPais}, {idGenero}, {oro}, {plata}, {bronce})")
+                connection.commit()
+                print("Inserción exitosa")
+                return True
+        finally:
+            self.cerrar_conexion()
+
+    def editar(self, idOlimpiada, idPais, idGenero, nuevo_oro, nuevo_plata, nuevo_bronce):
+        try:
+            connection = self.establecer_conexion()
+            if connection:
+                cursor = connection.cursor()
+                cursor.execute(f"UPDATE Resultados SET oro = {nuevo_oro}, plata = {nuevo_plata}, bronce = {nuevo_bronce} "
+                               f"WHERE idOlimpiada = {idOlimpiada} AND idPais = {idPais} AND idGenero = {idGenero}")
+                connection.commit()
+                print("Edición exitosa")
+                return True
+        finally:
+            self.cerrar_conexion()
+
+    def eliminar(self, idOlimpiada, idPais, idGenero):
+        try:
+            connection = self.establecer_conexion()
+            if connection:
+                cursor = connection.cursor()
+                cursor.execute(f"DELETE FROM Resultados WHERE idOlimpiada = {idOlimpiada} AND idPais = {idPais} AND idGenero = {idGenero}")
+                connection.commit()
+                if cursor.rowcount > 0:
+                    print("Eliminación exitosa")
+                    return True
+        finally:
+            self.cerrar_conexion()
+
+    def consultar(self, filtro):
+        try:
+            connection = self.establecer_conexion()
+            if connection:
+                cursor = connection.cursor(dictionary=True)
+                cursor.execute(f"SELECT * FROM Resultados WHERE {filtro}")
+                results = cursor.fetchall()
+                return results
+        finally:
+            self.cerrar_conexion()
+
+# Ejemplo de uso
+if __name__ == "__main__":
+    resultados_db = ResultadosMySQL(host="127.0.0.1", user="root", password="12345678", database="olimpiadas")
+    
+    # Insertar resultados
+    resultados_db.insertar(1, 1, 1, 3, 2, 1)
+
+    # Editar resultados
+    resultados_db.editar(1, 1, 1, 4, 2, 1)
+
+    # Eliminar resultados
+    resultados_db.eliminar(1, 1, 1)
+
+    # Consultar resultados
+    resultados = resultados_db.consultar("idPais = 1")
+    print(resultados)

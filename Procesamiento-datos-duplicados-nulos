@@ -1,0 +1,175 @@
+# ruiza vazquez monica
+# 951
+
+-------------------------#Realizar una función que reciba como parámetro un DataFrame y  retorne el porcentaje de valores nulos de cada columna.----------------------------------
+import pandas as pd
+import numpy as np
+
+def porcentaje_nulos_por_columna(dataframe):
+    porcentaje_nulos = (dataframe.isnull().mean() * 100).round(2)
+    return porcentaje_nulos
+
+# Crear un nuevo conjunto de datos para ilustrar el ejemplo
+datos_ejemplo = {
+    'Nombre': ['Juan', 'María', np.nan, 'Carlos', 'Ana'],
+    'Edad': [25, 30, 22, np.nan, 28],
+    'Ciudad': ['Lima', 'Cusco', 'Arequipa', np.nan, 'Trujillo'],
+    'Salario': [50000, 60000, 45000, 70000, np.nan],
+    'Experiencia': [2, 5, 1, 8, np.nan]
+}
+
+ejemplo_df = pd.DataFrame(datos_ejemplo)
+
+print("DataFrame original:")
+print(ejemplo_df)
+
+porcentaje_nulos_columnas = porcentaje_nulos_por_columna(ejemplo_df)
+print("\nPorcentaje de valores nulos por columna:")
+print(porcentaje_nulos_columnas)
+
+
+
+--------------------#Realizar una función que reciba como parámetro un DataFrame y retorne el número de renglones duplicados-------------------------
+import pandas as pd
+import numpy as np
+
+def contar_renglones_duplicados(dataframe):
+    duplicados = dataframe.duplicated()
+    num_duplicados = duplicados.sum()
+
+    return num_duplicados
+
+# Crear un nuevo conjunto de datos para ilustrar el ejemplo
+datos_ejemplo = {
+    'ID': [1, 2, 3, 4, 1],
+    'Nombre': ['Juan', 'María', 'Luis', 'Carlos', 'Juan'],
+    'Edad': [25, 30, 22, np.nan, 25],
+    'Ciudad': ['Lima', 'Cusco', 'Arequipa', 'Lima', 'Lima']
+}
+
+ejemplo_df = pd.DataFrame(datos_ejemplo)
+
+print("DataFrame original:")
+print(ejemplo_df)
+num_duplicados = contar_renglones_duplicados(ejemplo_df)
+print("\nNúmero de filas duplicadas:", num_duplicados)
+
+
+----------------------------------------#Realizar una función que reciba como parámetro un DataFrame y un máximo porcentaje. Este debe eliminar todas las columnas que superen o igualen el máximo porcentaje de valores nulos establecidos en el DataFrame Original. Retornar la lista nombres de columnas eliminadas.  Validar que el porcentaje máximo esté entre 0 y 1.------------------------------
+import pandas as pd
+import numpy as np
+
+def eliminar_columnas_nulos(dataframe, max_porcentaje):
+    # Validar que el porcentaje máximo esté entre 0 y 1
+    if not (0 <= max_porcentaje <= 1):
+        raise ValueError("El porcentaje máximo debe estar entre 0 y 1.")
+
+    # Calcular el porcentaje de valores nulos por columna
+    porcentaje_nulos = dataframe.isnull().mean()
+
+    # Filtrar las columnas que superen o igualen el máximo porcentaje de valores nulos
+    columnas_eliminar = porcentaje_nulos[porcentaje_nulos >= max_porcentaje].index.tolist()
+
+    # Eliminar las columnas del DataFrame y obtener la lista de nombres de columnas eliminadas
+    dataframe_modificado = dataframe.drop(columns=columnas_eliminar)
+    columnas_eliminadas = list(set(dataframe.columns) - set(dataframe_modificado.columns))
+
+    return columnas_eliminadas
+
+# Crear un nuevo conjunto de datos relacionado con el clima
+data_clima = {
+    'Fecha': ['2023-01-01', '2023-01-02', '2023-01-03', '2023-01-04', '2023-01-05'],
+    'Temperatura_Max': [25.0, 28.0, np.nan, 27.0, np.nan],
+    'Temperatura_Min': [15.0, 18.0, 14.0, np.nan, 17.0],
+    'Humedad': [60, np.nan, 55, 62, 58],
+    'Viento': [10, np.nan, 8, 12, np.nan],
+    'Presion': [1010, 1012, np.nan, 1008, 1015]
+}
+
+clima_df = pd.DataFrame(data_clima)
+print("DataFrame original:")
+print(clima_df)
+
+# Eliminar columnas con un máximo porcentaje de valores nulos del 30%
+columnas_eliminadas_clima = eliminar_columnas_nulos(clima_df, 0.3)
+
+# Lista de columnas eliminadas
+print("\nColumnas eliminadas:")
+print(columnas_eliminadas_clima)
+print("\nDataFrame modificado:")
+print(clima_df.drop(columns=columnas_eliminadas_clima))
+
+
+
+---------------------------------------------#Realizar una función que reciba como parámetro un DataFrame, una lista con los nombres de las columnas a verificar y una cadena. La cadena solo puede ser mean, bfill o ffill, en caso contrario lanzar una excepción. Debe sustituir los valores nulos por el método especificado y retornar el DataFrame modificado.--------------------------------------
+import pandas as pd
+import numpy as np
+
+def remplazar_nulos(dataframe, columnas, metodo):
+    if metodo not in ['mean', 'bfill', 'ffill']:
+        raise ValueError("El método debe ser 'mean', 'bfill' o 'ffill'.")
+
+    columnas_invalidas = set(columnas) - set(dataframe.columns)
+    if columnas_invalidas:
+        raise ValueError(f"Las siguientes columnas no existen en el DataFrame: {', '.join(columnas_invalidas)}.")
+
+    for columna in columnas:
+        if metodo == 'mean':
+            dataframe[columna].fillna(dataframe[columna].mean(), inplace=True)
+        elif metodo == 'bfill':
+            dataframe[columna].fillna(method='bfill', inplace=True)
+        elif metodo == 'ffill':
+            dataframe[columna].fillna(method='ffill', inplace=True)
+
+    return dataframe
+
+# Crear un nuevo conjunto de datos relacionados con las ventas
+data_ventas = {
+    'Producto': ['A', 'B', 'C', 'D', 'E'],
+    'Precio': [20.0, 25.0, np.nan, 30.0, np.nan],
+    'Ventas_Diarias': [100, np.nan, 120, np.nan, 90],
+    'Ingresos': [2000, 2500, 2400, np.nan, 1800]
+}
+
+ventas_df = pd.DataFrame(data_ventas)
+print("DataFrame original:")
+print(ventas_df)
+
+# Remplazar valores nulos en las columnas 'Precio' y 'Ingresos' utilizando el método 'mean'
+ventas_df_modificado = remplazar_nulos(ventas_df, ['Precio', 'Ingresos'], 'mean')
+print("\nDataFrame modificado:")
+print(ventas_df_modificado)
+
+
+------------------------------------#Realizar una función que reciba como parámetro un DataFrame y elimine los renglones repetidos en el DataFrame Original. Debe retornar la cantidad de renglones eliminados.-----------------------------------
+import pandas as pd
+
+def eliminar_renglones_duplicados(dataframe):
+    num_duplicados_originales = dataframe.duplicated().sum()
+    dataframe_modificado = dataframe.drop_duplicates()
+    num_duplicados_nuevos = dataframe_modificado.duplicated().sum()
+    renglones_eliminados = num_duplicados_originales - num_duplicados_nuevos
+    return renglones_eliminados
+
+# Crear un nuevo conjunto de datos relacionados con registros de clientes
+data_clientes = {
+    'ID_Cliente': [1, 2, 3, 4, 1],
+    'Nombre': ['Juan', 'Maria', 'Pedro', 'Laura', 'Juan'],
+    'Edad': [25, 30, 25, 22, 25],
+    'Correo': ['juan@email.com', 'maria@email.com', 'pedro@email.com', 'laura@email.com', 'juan@email.com']
+}
+
+clientes_df = pd.DataFrame(data_clientes)
+print("DataFrame original:")
+print(clientes_df)
+
+renglones_eliminados_clientes = eliminar_renglones_duplicados(clientes_df)
+print("\nCantidad de renglones eliminados:", renglones_eliminados_clientes)
+print("\nDataFrame modificado:")
+print(clientes_df.drop_duplicates())
+
+
+
+
+
+
